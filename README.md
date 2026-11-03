@@ -24,7 +24,7 @@ The app degrades gracefully: on a device without TrueDepth (e.g. iPhone SE, Simu
 
 ```
 TrueDepthExplorer/
-├── .github/workflows/build-ipa.yml      ← CI: builds an unsigned IPA on every push
+├── .github/workflows/main.yml           ← CI: builds an unsigned IPA on every push
 ├── TrueDepthExplorer.xcodeproj/         ← generated project (opens directly in Xcode)
 │   └── xcshareddata/xcschemes/…         ← shared scheme used by CI
 └── TrueDepthExplorer/
