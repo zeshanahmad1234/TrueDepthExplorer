@@ -1,0 +1,63 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Archive and package unsigned IPA
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i iphoneos || true
+
+      - name: Archive (unsigned)
+        run: |
+          set -euo pipefail
+          xcodebuild clean archive \
+            -project TrueDepthExplorer.xcodeproj \
+            -scheme TrueDepthExplorer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/TrueDepthExplorer.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS=""
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP_PATH="build/TrueDepthExplorer.xcarchive/Products/Applications/TrueDepthExplorer.app"
+          test -d "$APP_PATH"
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/
+          cd build
+          zip -qry TrueDepthExplorer-unsigned.ipa Payload
+          cd ..
+          ls -lh build/TrueDepthExplorer-unsigned.ipa
+
+      - name: Verify IPA structure
+        run: |
+          unzip -l build/TrueDepthExplorer-unsigned.ipa | head -20
+          test -f "build/Payload/TrueDepthExplorer.app/Info.plist" \
+            || { echo "::error::Info.plist missing from app bundle"; exit 1; }
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueDepthExplorer-unsigned-ipa
+          path: build/TrueDepthExplorer-unsigned.ipa
+          if-no-files-found: error
+
+      - name: Upload xcarchive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueDepthExplorer-xcarchive
+          path: build/TrueDepthExplorer.xcarchive
