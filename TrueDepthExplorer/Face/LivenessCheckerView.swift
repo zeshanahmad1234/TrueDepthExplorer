@@ -191,10 +191,12 @@ final class LivenessEngine: NSObject, ObservableObject, ARSessionDelegate {
         isFaceTracked = face.isTracked
 
         let quaternion = simd_quatf(face.transform)
-        let yaw = atan2(
-            2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y),
-            1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z)
-        )
+        // Explicitly typed intermediates keep this under the type-checker's
+        // per-expression budget (it timed out as one atan2 call).
+        let q: simd_quatf = quaternion
+        let num: Float = 2 * (q.w * q.z + q.x * q.y)
+        let den: Float = 1 - 2 * (q.y * q.y + q.z * q.z)
+        let yaw = atan2f(num, den)
         liveYawDegrees = yaw * 180 / Float.pi
 
         guard currentIndex < steps.count else { return }
@@ -218,7 +220,7 @@ final class LivenessEngine: NSObject, ObservableObject, ARSessionDelegate {
                 verificationSummary = Self.makeSummary(steps: updated, total: total)
                 steps = updated
                 phase = .passed
-                session.pause()
+                session?.pause()
                 return
             }
             updated[currentIndex].startedAt = Date()
@@ -226,7 +228,7 @@ final class LivenessEngine: NSObject, ObservableObject, ARSessionDelegate {
                   Date().timeIntervalSince(startedAt) > Self.stepTimeout {
             steps = updated
             phase = .failed("Timed out on “\(step.challenge.instruction)”. Sit 30–50 cm from the phone with your face well lit, then try again.")
-            session.pause()
+            session?.pause()
             return
         }
 
@@ -260,7 +262,9 @@ struct LivenessCheckerView: View {
                 }
             }
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background {
+            Theme.background.ignoresSafeArea()
+        }
         .onDisappear { engine.stop() }
     }
 
