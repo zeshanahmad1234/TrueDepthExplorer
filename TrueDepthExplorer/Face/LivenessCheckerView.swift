@@ -191,11 +191,11 @@ final class LivenessEngine: NSObject, ObservableObject, ARSessionDelegate {
         isFaceTracked = face.isTracked
 
         let quaternion = simd_quatf(face.transform)
-        // Explicitly typed intermediates keep this under the type-checker's
-        // per-expression budget (it timed out as one atan2 call).
-        let q: simd_quatf = quaternion
-        let num: Float = 2 * (q.w * q.z + q.x * q.y)
-        let den: Float = 1 - 2 * (q.y * q.y + q.z * q.z)
+        // simd_quatf exposes components only through its simd_float4 vector,
+        // and typed intermediates keep the expression small for the type-checker.
+        let v = quaternion.vector
+        let num: Float = 2 * (v.w * v.z + v.x * v.y)
+        let den: Float = 1 - 2 * (v.y * v.y + v.z * v.z)
         let yaw = atan2f(num, den)
         liveYawDegrees = yaw * 180 / Float.pi
 
