@@ -84,7 +84,7 @@ final class DepthEngine: NSObject, ObservableObject {
             depthOutput.alwaysDiscardsLateDepthData = true
             if session.canAddOutput(depthOutput) {
                 session.addOutput(depthOutput)
-                depthOutput.setDelegate(self, queue: processingQueue)
+                depthOutput.setDelegate(self, callbackQueue: processingQueue)
             }
 
             session.commitConfiguration()
@@ -229,7 +229,9 @@ struct DepthCameraView: View {
                 depthView
             }
         }
-        .background(.black.ignoresSafeArea())
+        .background {
+            Color.black.ignoresSafeArea()
+        }
         .onAppear { engine.start() }
         .onDisappear { engine.stop() }
     }
