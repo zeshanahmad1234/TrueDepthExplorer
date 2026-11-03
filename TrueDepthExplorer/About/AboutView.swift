@@ -106,7 +106,9 @@ struct AboutView: View {
             }
             .padding(16)
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background {
+            Theme.background.ignoresSafeArea()
+        }
     }
 }
 
