@@ -97,14 +97,17 @@ struct FaceMeshCameraView: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ARSCNView, context: Context) {
+        // ARSession exposes no `isRunning`, so the coordinator tracks it.
         if isSessionActive {
-            guard !view.session.isRunning else { return }
+            guard !context.coordinator.isSessionRunning else { return }
             guard ARFaceTrackingConfiguration.isSupported else { return }
             let configuration = ARFaceTrackingConfiguration()
             configuration.isLightEstimationEnabled = true
             view.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        } else if view.session.isRunning {
+            context.coordinator.isSessionRunning = true
+        } else if context.coordinator.isSessionRunning {
             view.session.pause()
+            context.coordinator.isSessionRunning = false
         }
     }
 
@@ -114,6 +117,7 @@ struct FaceMeshCameraView: UIViewRepresentable {
 
     final class Coordinator: NSObject, ARSCNViewDelegate {
         private let engine: FaceTrackingEngine
+        var isSessionRunning = false
 
         init(engine: FaceTrackingEngine) {
             self.engine = engine
@@ -143,7 +147,7 @@ struct FaceMeshCameraView: UIViewRepresentable {
                   let geometry = node.geometry as? ARSCNFaceGeometry else { return }
             geometry.update(from: faceAnchor.geometry)
             engine.noteGeometry(
-                vertexCount: faceAnchor.geometry.vertexCount,
+                vertexCount: faceAnchor.geometry.vertices.count,
                 triangleCount: faceAnchor.geometry.triangleCount
             )
         }
