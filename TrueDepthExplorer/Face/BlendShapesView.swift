@@ -90,7 +90,9 @@ struct BlendShapesView: View {
                 shapeList
             }
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background {
+            Theme.background.ignoresSafeArea()
+        }
         .onAppear { engine.start() }
         .onDisappear { engine.stop() }
     }
