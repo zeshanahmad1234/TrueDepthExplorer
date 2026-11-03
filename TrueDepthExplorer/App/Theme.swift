@@ -14,6 +14,8 @@ enum Theme {
     static let secondaryAccent = Color(red: 0.55, green: 0.35, blue: 1.00)
     static let good = Color.green
     static let warn = Color.orange
+    /// Dark backdrop used behind the list-style tabs.
+    static let background = Color(red: 0.05, green: 0.07, blue: 0.12)
 
     static var gradient: LinearGradient {
         LinearGradient(
@@ -89,3 +91,4 @@ struct UnsupportedCard: View {
         }
     }
 }
+
